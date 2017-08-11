@@ -1,0 +1,38 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: PhotoS3
+Parameters:
+  BucketPrefix:
+    Type: String
+    Description: Prefix for S3 bucket name
+    ConstraintDescription: must be valid S3 bucket characters and prefix+accountnumber+suffix <=63 characters
+    Default: photos3-
+    MinLength: 0
+    MaxLength: 63
+    AllowedPattern: '[-_\.a-zA-Z0-9]*'
+
+  BucketSuffix:
+    Type: String
+    Description: Suffix for S3 bucket name
+    ConstraintDescription: must be valid S3 bucket characters and prefix+accountnumber+suffix <=63 characters
+    Default: ''
+    MinLength: 0
+    MaxLength: 63
+    AllowedPattern: '[-_\.a-zA-Z0-9]*'
+
+Conditions: {}
+Mappings: {}
+
+Outputs:
+  UploadBucket:
+    Description: S3 bucket for uploads
+    Value: !Ref PhotoBucket
+
+Resources:
+  PhotoBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${BucketPrefix}${AWS::AccountId}${BucketSuffix}
+    # TODO Add event notification
+    # http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-bucket-notificationconfig.html
+
+# vim: ts=2:sw=2
