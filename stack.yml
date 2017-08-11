@@ -1,0 +1,18 @@
+---
+- hosts: regions
+  connection: local
+
+  vars:
+    region: "{{ inventory_hostname }}"
+
+  tasks:
+    - name: Manage CloudFormation stack
+      cloudformation:
+        stack_name: photos3
+        state: present
+        region: "{{ region }}"
+        template: cloudformation.yml
+        tags:
+          Purpose: Photo album
+
+# vim: ft=ansible
