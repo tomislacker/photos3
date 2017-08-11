@@ -32,7 +32,37 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub ${BucketPrefix}${AWS::AccountId}${BucketSuffix}
-    # TODO Add event notification
-    # http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-bucket-notificationconfig.html
+      NotificationConfiguration:
+        QueueConfigurations:
+          - Event: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: source
+            Queue: !Sub ${NewImageQueue.Arn}
+
+  NewImageQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeout: 300
+
+  NewImageQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref NewImageQueue
+      PolicyDocument:
+        Version: 2012-10-17
+        Id: S3Publish
+        Statement:
+          - Sid: S3PublishMessage
+            Effect: Allow
+            Principal: {Service: s3.amazonaws.com}
+            Action: ['SQS:SendMessage']
+            Resource: !Sub ${NewImageQueue.Arn}
+            Condition:
+              ArnLike:
+                'aws:SourceArn': !Sub ${PhotoBucket.Arn}
 
 # vim: ts=2:sw=2
