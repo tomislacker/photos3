@@ -27,6 +27,10 @@ Outputs:
     Description: S3 bucket for uploads
     Value: !Ref PhotoBucket
 
+  MetadataTable:
+    Description: DynamoDB table for image metadata
+    Value: !Ref PhotoMetaTable
+
 Resources:
   PhotoBucket:
     Type: AWS::S3::Bucket
@@ -97,5 +101,23 @@ Resources:
               - Effect: Allow
                 Action: 'sqs:ListQueues'
                 Resource: !Sub 'arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:*'
+
+  PhotoMetaTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: S3Key
+          AttributeType: S
+      KeySchema:
+        - KeyType: HASH
+          AttributeName: S3Key
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      Tags:
+        - Key: Platform
+          Value: PhotoS3
+        - Key: Purpose
+          Value: Metadata
 
 # vim: ts=2:sw=2
