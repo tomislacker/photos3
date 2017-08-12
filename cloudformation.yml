@@ -41,6 +41,11 @@ Resources:
                   - Name: prefix
                     Value: source
             Queue: !Sub ${NewImageQueue.Arn}
+      Tags:
+        - Key: Platform
+          Value: PhotoS3
+        - Key: Purpose
+          Value: Storage
 
   NewImageQueue:
     Type: AWS::SQS::Queue
