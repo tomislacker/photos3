@@ -1,6 +1,8 @@
 AWS_PROFILE  := personal
 REGION       := us-east-1
 PWD          := $(shell pwd)
+PYVER        := 3.6
+VENV_PATH    := venv
 
 BUILDER_IMAGE_TAG := photos3/python-builder
 
@@ -23,3 +25,6 @@ build.zip :
 		-v $(PWD):/code \
 		-w /code \
 		$(BUILDER_IMAGE_TAG)
+
+venv :
+	virtualenv -p python$(PYVER) $(VENV_PATH)
