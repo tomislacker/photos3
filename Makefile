@@ -28,3 +28,7 @@ build.zip :
 
 venv :
 	virtualenv -p python$(PYVER) $(VENV_PATH)
+
+.PHONY  : version
+version : venv
+	@echo "from photos3 import __version__; print(__version__)" | $(VENV_PATH)/bin/python
