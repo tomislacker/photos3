@@ -17,6 +17,10 @@ stack  :
 		--diff \
 		-vvv
 
+.PHONY : util
+util   :
+	make -C util all
+
 .PHONY    : build.zip
 build.zip :
 	docker run \
@@ -24,7 +28,13 @@ build.zip :
 		--rm \
 		-v $(PWD):/code \
 		-w /code \
+		-e BUILD_ZIP=$@ \
 		$(BUILDER_IMAGE_TAG)
+
+.PHONY           : build.zip.sha256
+build.zip.sha256 :
+	@sha256sum build.zip \
+		| cut -d' ' -f1
 
 venv :
 	virtualenv -p python$(PYVER) $(VENV_PATH)

@@ -7,7 +7,7 @@ DEFAULT_ZIP=build.zip
 
 BUILD_UID=${BUILD_UID:-${DEFAULT_UID}}
 BUILD_GID=${BUILD_GID:-${DEFAULT_GID}}
-BUILD_ZIP=${BUILD_ZIP:-${DEFAULT_ZIP}}
+BUILD_ZIP=$(readlink -m $(pwd))/${BUILD_ZIP:-${DEFAULT_ZIP}}
 
 # Create virtualenv
 virtualenv /tmp/venv
