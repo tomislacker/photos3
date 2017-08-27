@@ -36,6 +36,13 @@ build.zip.sha256 :
 	@sha256sum build.zip \
 		| cut -d' ' -f1
 
+.PHONY       : deploy-build
+deploy-build :
+	AWS_PROFILE=$(AWS_PROFILE) \
+		aws s3 cp \
+			build.zip \
+			s3://$(shell AWS_PROFILE=$(AWS_PROFILE) aws cloudformation describe-stacks --stack-name photos3 | jq -r '.Stacks[0].Outputs | .[] | select(.OutputKey=="UploadBucket") | .OutputValue')/code/$(shell make build.zip.sha256).zip
+
 venv :
 	virtualenv -p python$(PYVER) $(VENV_PATH)
 
