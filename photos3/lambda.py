@@ -12,7 +12,7 @@ import tempfile
 import traceback
 import urllib
 
-from .imgprocess import ingest_image
+from photos3.imgprocess import ingest_image
 
 
 ##############################

@@ -10,7 +10,7 @@ from PIL import Image
 from PIL.ExifTags import GPSTAGS
 from PIL.ExifTags import TAGS
 
-from .model import ImageMetaData
+from photos3.model import ImageMetaData
 
 
 def get_image_data(img):
