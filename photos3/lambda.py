@@ -54,22 +54,14 @@ def process_new_image_queue(event, context):
                 s=s3_object_size,
             ))
 
-            _, file_extension = os.path.splitext(s3_object.key)
-            tmp_file, tmp_filename = tempfile.mkstemp(suffix=file_extension)
-            s3_object.download_file(tmp_filename)
-            print("Saved to {}".format(tmp_filename))
-
             # Ingest the image
             try:
-                ingest_image(tmp_filename)
+                ingest_image(s3_object)
 
             except Exception as e:
                 # Report the failure
                 failed_objects += 1
                 traceback.print_exception(*sys.exc_info())
-
-            finally:
-                os.remove(tmp_filename)
 
         # TODO Delete the message after successful processing
         if not failed_objects:
