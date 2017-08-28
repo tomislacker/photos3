@@ -14,6 +14,7 @@ stack  :
 		-i regions \
 		-l $(REGION) \
 		stack.yml \
+		-e s3_deploy_key=$(shell make build.zip.sha256) \
 		--diff \
 		-vvv
 

@@ -12,6 +12,8 @@
         state: present
         region: "{{ region }}"
         template: cloudformation.yml
+        template_parameters:
+          S3DeployKey: "{{ s3_deploy_key }}"
         tags:
           Purpose: Photo album
 
