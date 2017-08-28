@@ -104,6 +104,11 @@ Resources:
                   - 'sqs:ListDeadLetterSourceQueues'
                   - 'sqs:ReceiveMessage'
                 Resource: !Sub ${NewImageQueue.Arn}
+
+              - Effect: Allow
+                Action: 'sqs:ListQueues'
+                Resource: !Sub 'arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:*'
+
         - PolicyName: logs
           PolicyDocument:
             Statement:
@@ -111,10 +116,6 @@ Resources:
                 Action:
                   - logs:*
                 Resource: arn:aws:logs:*:*:*
-
-              - Effect: Allow
-                Action: 'sqs:ListQueues'
-                Resource: !Sub 'arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:*'
 
   PhotoMetaTable:
     Type: AWS::DynamoDB::Table
