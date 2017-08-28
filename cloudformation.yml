@@ -19,6 +19,13 @@ Parameters:
     MaxLength: 63
     AllowedPattern: '[-_\.a-zA-Z0-9]*'
 
+  S3DeployKey:
+    Type: String
+    Description: Code revision
+    ConstraintDescription: must be a valid S3 key
+    MinLength: 1
+    AllowedPattern: '^[a-f0-9]+$'
+
 Conditions: {}
 Mappings: {}
 
@@ -26,6 +33,10 @@ Outputs:
   UploadBucket:
     Description: S3 bucket for uploads
     Value: !Ref PhotoBucket
+
+  MetadataTable:
+    Description: DynamoDB table for image metadata
+    Value: !Ref PhotoMetaTable
 
 Resources:
   PhotoBucket:
@@ -41,6 +52,11 @@ Resources:
                   - Name: prefix
                     Value: source
             Queue: !Sub ${NewImageQueue.Arn}
+      Tags:
+        - Key: Platform
+          Value: PhotoS3
+        - Key: Purpose
+          Value: Storage
 
   NewImageQueue:
     Type: AWS::SQS::Queue
@@ -64,5 +80,84 @@ Resources:
             Condition:
               ArnLike:
                 'aws:SourceArn': !Sub ${PhotoBucket.Arn}
+
+  NewImageWorkerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: ['sts:AssumeRole']
+      Path: /
+      Policies:
+        - PolicyName: sqsrx
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'sqs:DeleteMessage*'
+                  - 'sqs:GetQueueAttributes'
+                  - 'sqs:GetQueueUrl'
+                  - 'sqs:ListDeadLetterSourceQueues'
+                  - 'sqs:ReceiveMessage'
+                Resource: !Sub ${NewImageQueue.Arn}
+        - PolicyName: logs
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:*
+                Resource: arn:aws:logs:*:*:*
+
+              - Effect: Allow
+                Action: 'sqs:ListQueues'
+                Resource: !Sub 'arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:*'
+
+  PhotoMetaTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: S3Key
+          AttributeType: S
+      KeySchema:
+        - KeyType: HASH
+          AttributeName: S3Key
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      Tags:
+        - Key: Platform
+          Value: PhotoS3
+        - Key: Purpose
+          Value: Metadata
+
+  NewImageWorker:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Initially processes new images
+      Handler: photos3.lambda.process_new_image_queue
+      Code:
+        S3Bucket: !Ref PhotoBucket
+        S3Key: !Sub code/${S3DeployKey}.zip
+      MemorySize: 256
+      Role: !Sub ${NewImageWorkerRole.Arn}
+      Runtime: python3.6
+      Timeout: 300
+      Environment:
+        Variables:
+          TASK_QUEUE: !Sub ${NewImageQueue.QueueName}
+          META_TABLE: !Sub ${PhotoMetaTable}
+      Tags:
+        - Key: Platform
+          Value: PhotoS3
+        - Key: Purpose
+          Value: ImageProcessing
+
+  # TODO Create scheduler lambda
+  # https://cloudonaut.io/integrate-sqs-and-lambda-serverless-architecture-for-asynchronous-workloads/
+  # http://mt.wiglaf.org/aaronm/2016/11/s3-triggered-lambda-via-beanstalk.html
 
 # vim: ts=2:sw=2

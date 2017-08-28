@@ -1,0 +1,2 @@
+include versioneer.py
+include photos3/_version.py
