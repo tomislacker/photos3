@@ -72,3 +72,11 @@ def ingest_image(s3_object):
     except Exception:
         # Ignore the inability to remove the file
         pass
+
+    # Save entry to the database
+    image_entry = ImageMetaData(s3_object.key)
+    image_entry.info = basicdata
+    image_entry.exif = exifdata
+    image_entry.save()
+
+    return image_entry

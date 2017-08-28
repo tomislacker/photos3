@@ -149,6 +149,7 @@ Resources:
       Environment:
         Variables:
           TASK_QUEUE: !Sub ${NewImageQueue.QueueName}
+          META_TABLE: !Sub ${PhotoMetaTable}
       Tags:
         - Key: Platform
           Value: PhotoS3

@@ -42,6 +42,7 @@ setup(
         'boto3',
         'pillow',
         'pyaml',
+        'pynamodb',
     ],
 
     extras_require={
