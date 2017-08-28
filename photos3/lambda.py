@@ -63,7 +63,6 @@ def process_new_image_queue(event, context):
                 failed_objects += 1
                 traceback.print_exception(*sys.exc_info())
 
-        # TODO Delete the message after successful processing
         if not failed_objects:
             print("Removing queue message")
             msg_obj.delete()
