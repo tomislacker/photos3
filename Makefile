@@ -31,6 +31,7 @@ build.zip :
 		-w /code \
 		-e BUILD_ZIP=$@ \
 		$(BUILDER_IMAGE_TAG)
+	zip -ur $@ photos3 -x "*.pyc"
 
 .PHONY           : build.zip.sha256
 build.zip.sha256 :
