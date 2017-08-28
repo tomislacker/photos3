@@ -81,32 +81,6 @@ Resources:
               ArnLike:
                 'aws:SourceArn': !Sub ${PhotoBucket.Arn}
 
-  NewImageSchedulerRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-            Action: ['sts:AssumeRole']
-      Path: /
-      Policies:
-        - PolicyName: logs
-          PolicyDocument:
-            Statement:
-              - Effect: Allow
-                Action:
-                  - logs:*
-                Resource: arn:aws:logs:*:*:*
-        - PolicyName: invokeworker
-          PolicyDocument:
-            Statement:
-              - Effect: Allow
-                Action: ['lambda:InvokeFunction']
-                Resource: !Sub ${NewImageWorker.Arn}
-
   NewImageWorkerRole:
     Type: AWS::IAM::Role
     Properties:
@@ -130,6 +104,13 @@ Resources:
                   - 'sqs:ListDeadLetterSourceQueues'
                   - 'sqs:ReceiveMessage'
                 Resource: !Sub ${NewImageQueue.Arn}
+        - PolicyName: logs
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:*
+                Resource: arn:aws:logs:*:*:*
 
               - Effect: Allow
                 Action: 'sqs:ListQueues'
