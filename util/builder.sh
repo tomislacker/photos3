@@ -17,5 +17,10 @@ virtualenv /tmp/venv
 
 # Build the zip
 cd /tmp/venv/lib/python3.6/site-packages/
+if [ -e ${BUILD_ZIP} ]
+then
+    rm -f ${BUILD_ZIP}
+fi
+
 zip -r ${BUILD_ZIP} *
 chown ${BUILD_UID}:${BUILD_GID} ${BUILD_ZIP}
