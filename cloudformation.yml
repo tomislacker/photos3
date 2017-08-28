@@ -117,6 +117,19 @@ Resources:
                   - logs:*
                 Resource: arn:aws:logs:*:*:*
 
+        - PolicyName: s3fetch
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:ListBucket*'
+                Resource: !Sub ${PhotoBucket.Arn}
+
+              - Effect: Allow
+                Action:
+                  - 's3:GetObject*'
+                Resource: !Sub ${PhotoBucket.Arn}/*
+
   PhotoMetaTable:
     Type: AWS::DynamoDB::Table
     Properties:
