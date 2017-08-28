@@ -98,9 +98,7 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - logs:CreateLogGroup
-                  - logs:CreateLogStream
-                  - logs:PutLogEvents
+                  - logs:*
                 Resource: arn:aws:logs:*:*:*
         - PolicyName: invokeworker
           PolicyDocument:
