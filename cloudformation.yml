@@ -130,6 +130,21 @@ Resources:
                   - 's3:GetObject*'
                 Resource: !Sub ${PhotoBucket.Arn}/*
 
+        - PolicyName: dynamodb
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'dynamodb:Batch*'
+                  - 'dynamodb:DeleteItem'
+                  - 'dynamodb:DescribeTable'
+                  - 'dynamodb:GetItem'
+                  - 'dynamodb:PutItem'
+                  - 'dynamodb:Query'
+                  - 'dynamodb:Scan'
+                  - 'dynamodb:UpdateTable'
+                Resource: !Sub ${PhotoMetaTable.Arn}
+
   PhotoMetaTable:
     Type: AWS::DynamoDB::Table
     Properties:
