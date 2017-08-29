@@ -50,6 +50,25 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub ${BucketPrefix}${AWS::AccountId}${BucketSuffix}
+      LifecycleConfiguration:
+        Rules:
+          - AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 1
+            ExpirationInDays: 14
+            NoncurrentVersionExpirationInDays: 14
+            Prefix: code/
+            Status: Enabled
+          - AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 1
+            NoncurrentVersionExpirationInDays: 1
+            Prefix: source/
+            Status: Enabled
+          - AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 1
+            NoncurrentVersionExpirationInDays: 1
+            Prefix: thumbnails/
+            Status: Enabled
+
       NotificationConfiguration:
         QueueConfigurations:
           - Event: s3:ObjectCreated:*
