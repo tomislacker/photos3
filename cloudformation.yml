@@ -171,6 +171,13 @@ Resources:
                   - 'dynamodb:UpdateTable'
                 Resource: !Sub ${PhotoMetaTable.Arn}
 
+        - PolicyName: thumbnails
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action: sns:Publish
+                Resource: !Sub ${ThumbnailWorkerTopic}
+
   PhotoMetaTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -205,11 +212,13 @@ Resources:
         Variables:
           TASK_QUEUE: !Sub ${NewImageQueue.QueueName}
           META_TABLE: !Sub ${PhotoMetaTable}
+          THUMBNAIL_TOPIC: !Sub ${ThumbnailWorkerTopic}
       Tags:
         - Key: Platform
           Value: PhotoS3
         - Key: Purpose
           Value: ImageProcessing
+    DependsOn: NewImageWorkerRole
 
   NewImageRule:
     Type: AWS::Events::Rule
@@ -228,5 +237,78 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: events.amazonaws.com
       SourceArn: !Sub ${NewImageRule.Arn}
+
+  ThumbnailWorkerTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: ThumbnailGenerator
+      Subscription:
+        - Endpoint: !Sub ${ThumbnailWorker.Arn}
+          Protocol: lambda
+
+  ThumbnailWorkerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: ['sts:AssumeRole']
+      Path: /
+      Policies:
+        - PolicyName: logs
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:*
+                Resource: arn:aws:logs:*:*:*
+
+        - PolicyName: s3
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:ListBucket*'
+                Resource: !Sub ${PhotoBucket.Arn}
+
+              - Effect: Allow
+                Action:
+                  - 's3:GetObject*'
+                Resource: !Sub ${PhotoBucket.Arn}/source/*
+
+              - Effect: Allow
+                Action:
+                  - 's3:PutObject*'
+                Resource: !Sub ${PhotoBucket.Arn}/thumbnail/*
+
+  ThumbnailWorker:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Generates thumbnails
+      Handler: photos3.lambda.process_thumbnail
+      Code:
+        S3Bucket: !Ref PhotoBucket
+        S3Key: !Sub code/${S3DeployKey}.zip
+      MemorySize: 128
+      Role: !Sub ${ThumbnailWorkerRole.Arn}
+      Runtime: python3.6
+      Timeout: 300
+      Tags:
+        - Key: Platform
+          Value: PhotoS3
+        - Key: Purpose
+          Value: ImageProcessing
+    DependsOn: ThumbnailWorkerRole
+
+  ThumbnailWorkerPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      Principal: sns.amazonaws.com
+      SourceArn: !Sub ${ThumbnailWorkerTopic}
+      FunctionName: !Sub ${ThumbnailWorker.Arn}
 
 # vim: ts=2:sw=2
