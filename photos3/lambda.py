@@ -12,6 +12,7 @@ import tempfile
 import traceback
 import urllib
 
+from photos3.imgprocess import create_thumbnail
 from photos3.imgprocess import ingest_image
 
 
@@ -76,6 +77,34 @@ def process_new_image_queue(event, context):
             if not failed_objects:
                 print("Removing queue message")
                 msg_obj.delete()
+
+
+def process_thumbnail(event, context):
+    """
+    Invoked by the initial image processing Lambda
+    """
+    for record in event['Records']:
+        # Read in the SNS message and determine the source S3 object
+        sns_data = json.loads(record['Sns']['Message'])
+        s3_object = s3.Object(sns_data['s3_bucket'], sns_data['s3_key'])
+        width = int(sns_data['width'])
+        height = int(sns_data['height'])
+
+        print("Generating {w}x{h} for s3://{b}/{k}".format(
+            w=width,
+            h=height,
+            b=s3_object.bucket_name,
+            k=s3_object.key))
+
+        # Generate the thumbnail
+        try:
+            create_thumbnail(s3_object, width, height)
+
+        except Exception as e:
+            # Report the failure
+            failed_objects += 1
+            traceback.print_exception(*sys.exc_info())
+
 
 if __name__ == '__main__':
     process_new_image_queue(None, None)
