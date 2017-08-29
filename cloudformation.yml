@@ -211,10 +211,6 @@ Resources:
         - Key: Purpose
           Value: ImageProcessing
 
-  # TODO Create scheduler lambda
-  # https://cloudonaut.io/integrate-sqs-and-lambda-serverless-architecture-for-asynchronous-workloads/
-  # http://mt.wiglaf.org/aaronm/2016/11/s3-triggered-lambda-via-beanstalk.html
-
   NewImageRule:
     Type: AWS::Events::Rule
     Properties:
