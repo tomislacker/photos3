@@ -95,6 +95,7 @@ def process_new_image_queue(event, context):
                     # Report the failure
                     failed_objects += 1
                     traceback.print_exception(*sys.exc_info())
+                    continue
 
                 # Request thumbnail generation
                 # Ref: https://stackoverflow.com/a/37009414
