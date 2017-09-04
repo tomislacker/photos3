@@ -3,6 +3,7 @@ photos3.imgprocess
 ==================
 Contains code for processing images
 """
+import base64
 import os
 import pathlib
 import tempfile
@@ -30,6 +31,12 @@ def get_image_data(img):
         if k != 'exif'
     }
 
+    for k, v in basicdata.items():
+        if type(v) is bytes:
+            basicdata.update({
+                k: str(base64.b64encode(v)),
+            })
+
     exifdata = {}
     try:
         # Read exif data from image, if available
@@ -45,6 +52,12 @@ def get_image_data(img):
         print("WARNING: File ({t}) '{f}' does not have EXIF data".format(
             t=img.__class__.__name__,
             f=file_path))
+
+    for k, v in exifdata.items():
+        if type(v) is bytes:
+            exifdata.update({
+                k: str(base64.b64encode(v)),
+            })
 
     return basicdata, exifdata
 
