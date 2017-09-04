@@ -52,8 +52,10 @@ def process_new_image_queue(event, context):
     This implicitly takes advantage of the LACK OF long polling to reduce
     runtime given that image uploads are typically few-and-far-between.
     """
-    print("Reading from {}".format(os.environ.get('TASK_QUEUE')))
-    new_image_queue = sqs.get_queue_by_name(QueueName=os.environ.get('TASK_QUEUE'))
+    task_queue_name = event.get('TASK_QUEUE',
+                                os.environ.get('TASK_QUEUE'))
+    print("Reading from {}".format(task_queue_name))
+    new_image_queue = sqs.get_queue_by_name(QueueName=task_queue_name)
 
     has_messages = True
     while has_messages:
