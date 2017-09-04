@@ -92,7 +92,9 @@ def process_new_image_queue(event, context):
                     s3_object_size = s3_object.content_length
                 except ClientError as e:
                     # Ignore 404s. This image was already processed
-                    if e.response['Error']['Code'] != '404':
+                    if str(e.response['Error']['Code']) == '404':
+                        continue
+                    else:
                         raise
 
                 # TODO Do not process objects over a certain size
