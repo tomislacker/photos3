@@ -16,3 +16,11 @@ class ImageMetaData(Model):
     checksum = UnicodeAttribute(hash_key=True)
     exif = JSONAttribute()
     info = JSONAttribute()
+
+
+class AlbumImage(Model):
+    class Meta:
+        table_name = os.environ.get('ALBUM_TABLE')
+
+    name = UnicodeAttribute(hash_key=True)
+    checksum = UnicodeAttribute(range_key=True)

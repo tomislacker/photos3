@@ -63,6 +63,10 @@ Outputs:
     Description: DynamoDB table for image metadata
     Value: !Ref PhotoMetaTable
 
+  AlbumTable:
+    Description: DynamoDB table for Album-Image membership
+    Value: !Ref PhotoAlbumTable
+
 Resources:
   PhotoBucket:
     Type: AWS::S3::Bucket
@@ -193,7 +197,9 @@ Resources:
                   - 'dynamodb:Query'
                   - 'dynamodb:Scan'
                   - 'dynamodb:UpdateTable'
-                Resource: !Sub ${PhotoMetaTable.Arn}
+                Resource:
+                  - !Sub ${PhotoAlbumTable.Arn}
+                  - !Sub ${PhotoMetaTable.Arn}
 
         - PolicyName: thumbnails
           PolicyDocument:
@@ -220,6 +226,28 @@ Resources:
         - Key: Purpose
           Value: Metadata
 
+  PhotoAlbumTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: name
+          AttributeType: S
+        - AttributeName: checksum
+          AttributeType: S
+      KeySchema:
+        - KeyType: HASH
+          AttributeName: name
+        - KeyType: RANGE
+          AttributeName: checksum
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      Tags:
+        - Key: Platform
+          Value: PhotoS3
+        - Key: Purpose
+          Value: Metadata
+
   NewImageWorker:
     Type: AWS::Lambda::Function
     Properties:
@@ -234,6 +262,7 @@ Resources:
       Timeout: 300
       Environment:
         Variables:
+          ALBUM_TABLE: !Sub ${PhotoAlbumTable}
           TASK_QUEUE: !Sub ${NewImageQueue.QueueName}
           META_TABLE: !Sub ${PhotoMetaTable}
           THUMBNAIL_TOPIC: !Sub ${ThumbnailWorkerTopic}
