@@ -4,6 +4,7 @@ photos3.imgprocess
 Contains code for processing images
 """
 import os
+import pathlib
 import tempfile
 
 from PIL import Image
@@ -11,6 +12,7 @@ from PIL.ExifTags import GPSTAGS
 from PIL.ExifTags import TAGS
 from hashlib import sha256
 
+from photos3.model import AlbumImage
 from photos3.model import ImageMetaData
 
 
@@ -66,14 +68,16 @@ def _get_image_from_s3(s3_object):
     return tmp_filename, img
 
 
-def ingest_image(s3_object, original_prefix):
+def ingest_image(s3_object, original_prefix, upload_prefix):
     """
     Handles new image ingestion
 
     :param s3_object: New photo in S3
     :type s3_object: boto3.resources.factory.s3.Object
-    :param original_prefix: S3 key prefix for original emails
+    :param original_prefix: S3 key prefix for original images
     :type original_prefix: str
+    :param upload_prefix: S3 key prefix for uploaded images
+    :type upload_prefix: str
     :returns: DynamoDB entry for new metadata
     :rtype: photos3.model.ImageMetaData
     """
@@ -112,6 +116,16 @@ def ingest_image(s3_object, original_prefix):
 
     # Delete the originally uploaded file
     s3_object.delete()
+
+    # Decode the uploaded files path and see if it should be classified into
+    # an album
+    upload_path = pathlib.Path(s3_object.key[len(upload_prefix):])
+    if len(upload_path.parts) > 2:
+        album_name = "/".join(upload_path.parts[1:-1])
+        print("Adding to album '{}'".format(album_name))
+
+        album_entry = AlbumImage(album_name, checksum)
+        album_entry.save()
 
     return new_key, image_entry
 

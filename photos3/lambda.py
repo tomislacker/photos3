@@ -58,6 +58,8 @@ def process_new_image_queue(event, context):
                                 os.environ.get('TASK_QUEUE'))
     original_prefix = event.get('S3_PREFIX_ORIGINAL',
                                 os.environ.get('S3_PREFIX_ORIGINAL'))
+    upload_prefix = event.get('S3_PREFIX_UPLOAD',
+                              os.environ.get('S3_PREFIX_UPLOAD'))
 
     print("Reading from {}".format(task_queue_name))
     new_image_queue = sqs.get_queue_by_name(QueueName=task_queue_name)
@@ -104,7 +106,8 @@ def process_new_image_queue(event, context):
                 # Ingest the image
                 try:
                     s3_object, image_meta_data = ingest_image(s3_object,
-                                                              original_prefix)
+                                                              original_prefix,
+                                                              upload_prefix)
 
                 except Exception as e:
                     # Report the failure

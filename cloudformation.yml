@@ -267,6 +267,7 @@ Resources:
           META_TABLE: !Sub ${PhotoMetaTable}
           THUMBNAIL_TOPIC: !Sub ${ThumbnailWorkerTopic}
           S3_PREFIX_ORIGINAL: !Ref S3PrefixOriginal
+          S3_PREFIX_UPLOAD: !Ref S3PrefixUpload
       Tags:
         - Key: Platform
           Value: PhotoS3
