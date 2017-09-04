@@ -12,6 +12,8 @@ import tempfile
 import traceback
 import urllib
 
+from botocore.exceptions import ClientError
+
 from photos3.imgprocess import create_thumbnail
 from photos3.imgprocess import ingest_image
 
@@ -79,7 +81,14 @@ def process_new_image_queue(event, context):
                 # Fetch the S3 bucket and object
                 s3_bucket = s3.Bucket(record['s3']['bucket']['name'])
                 s3_object = s3_bucket.Object(urllib.parse.unquote_plus(record['s3']['object']['key']))
-                s3_object_size = record['s3']['object']['size']
+
+                try:
+                    # Find file size
+                    s3_object_size = s3_object.content_length
+                except ClientError as e:
+                    # Ignore 404s. This image was already processed
+                    if e.response['Error']['Code'] != '404':
+                        raise
 
                 # TODO Do not process objects over a certain size
 
