@@ -9,6 +9,7 @@ import tempfile
 from PIL import Image
 from PIL.ExifTags import GPSTAGS
 from PIL.ExifTags import TAGS
+from hashlib import sha256
 
 from photos3.model import ImageMetaData
 
@@ -65,12 +66,14 @@ def _get_image_from_s3(s3_object):
     return tmp_filename, img
 
 
-def ingest_image(s3_object):
+def ingest_image(s3_object, original_prefix):
     """
     Handles new image ingestion
 
     :param s3_object: New photo in S3
     :type s3_object: boto3.resources.factory.s3.Object
+    :param original_prefix: S3 key prefix for original emails
+    :type original_prefix: str
     :returns: DynamoDB entry for new metadata
     :rtype: photos3.model.ImageMetaData
     """
@@ -79,6 +82,10 @@ def ingest_image(s3_object):
     # Read all metadata from the file
     basicdata, exifdata = get_image_data(img)
 
+    # Determine checksum of the file
+    with open(tmp_filename, 'rb') as imgin:
+        checksum = sha256(imgin.read()).hexdigest()
+
     # Remove the image
     try:
         os.remove(tmp_filename)
@@ -86,13 +93,27 @@ def ingest_image(s3_object):
         # Ignore the inability to remove the file
         pass
 
+    # Create a new object in the originals directory
+    _, new_key_ext = os.path.splitext(s3_object.key)
+    new_key = s3_object.Bucket().Object(
+        "{p}/{c}.{e}".format(
+            p=original_prefix,
+            c=checksum,
+            e=new_key_ext))
+    new_key.copy_from(CopySource="{b}/{k}".format(
+        b=s3_object.bucket_name,
+        k=s3_object.key))
+
     # Save entry to the database
-    image_entry = ImageMetaData(s3_object.key)
+    image_entry = ImageMetaData(checksum)
     image_entry.info = basicdata
     image_entry.exif = exifdata
     image_entry.save()
 
-    return image_entry
+    # Delete the originally uploaded file
+    s3_object.delete()
+
+    return new_key, image_entry
 
 
 def create_thumbnail(s3_object, thumbnail_prefix, width, height):

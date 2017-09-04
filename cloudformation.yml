@@ -45,6 +45,12 @@ Parameters:
     MinLength: 1
     Default: thumbnail
 
+  S3PrefixOriginal:
+    Type: String
+    Description: S3 key prefix for original images
+    MinLength: 1
+    Default: original
+
 Conditions: {}
 Mappings: {}
 
@@ -168,6 +174,11 @@ Resources:
                   - 's3:GetObject*'
                 Resource: !Sub ${PhotoBucket.Arn}/${S3PrefixUpload}/*
 
+              - Effect: Allow
+                Action:
+                  - 's3:PutObject*'
+                Resource: !Sub ${PhotoBucket.Arn}/${S3PrefixOriginal}/*
+
         - PolicyName: dynamodb
           PolicyDocument:
             Statement:
@@ -194,11 +205,11 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
-        - AttributeName: S3Key
+        - AttributeName: checksum
           AttributeType: S
       KeySchema:
         - KeyType: HASH
-          AttributeName: S3Key
+          AttributeName: checksum
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
@@ -225,6 +236,7 @@ Resources:
           TASK_QUEUE: !Sub ${NewImageQueue.QueueName}
           META_TABLE: !Sub ${PhotoMetaTable}
           THUMBNAIL_TOPIC: !Sub ${ThumbnailWorkerTopic}
+          S3_PREFIX_ORIGINAL: !Ref S3PrefixOriginal
       Tags:
         - Key: Platform
           Value: PhotoS3
@@ -289,7 +301,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - 's3:GetObject*'
-                Resource: !Sub ${PhotoBucket.Arn}/${S3PrefixUpload}/*
+                Resource: !Sub ${PhotoBucket.Arn}/${S3PrefixOriginal}/*
 
               - Effect: Allow
                 Action:

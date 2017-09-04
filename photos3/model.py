@@ -13,6 +13,6 @@ class ImageMetaData(Model):
     class Meta:
         table_name = os.environ.get('META_TABLE')
 
-    S3Key = UnicodeAttribute(hash_key=True)
+    checksum = UnicodeAttribute(hash_key=True)
     exif = JSONAttribute()
     info = JSONAttribute()
