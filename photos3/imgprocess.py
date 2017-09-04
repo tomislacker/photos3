@@ -95,12 +95,14 @@ def ingest_image(s3_object):
     return image_entry
 
 
-def create_thumbnail(s3_object, width, height):
+def create_thumbnail(s3_object, thumbnail_prefix, width, height):
     """
     Creates a thumbnail image
 
     :param s3_object: New photo in S3
     :type s3_object: boto3.resources.factory.s3.Object
+    :param thumbnail_prefix: S3 key prefix for thumbnails
+    :type thumbnail_prefix: str
     :param width: Maximum width
     :type width: int
     :param height: Maximum height
@@ -119,7 +121,8 @@ def create_thumbnail(s3_object, width, height):
     img.save(tmp_filename)
 
     # Push the thumbnail into S3
-    s3_thumbnail = s3_object.Bucket().Object("thumbnail/{x}x{y}/{f}".format(
+    s3_thumbnail = s3_object.Bucket().Object("{p}/{x}x{y}/{f}".format(
+        p=thumbnail_prefix,
         x=width,
         y=height,
         f=os.path.basename(s3_object.key)))

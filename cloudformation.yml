@@ -33,6 +33,18 @@ Parameters:
     Default: 'rate(5 minutes)'
     AllowedPattern: '^rate\(.*\)$'
 
+  S3PrefixUpload:
+    Type: String
+    Description: S3 key prefix for new uploads
+    MinLength: 1
+    Default: source
+
+  S3PrefixThumbnail:
+    Type: String
+    Description: S3 key prefix for thumbnails
+    MinLength: 1
+    Default: thumbnail
+
 Conditions: {}
 Mappings: {}
 
@@ -61,12 +73,12 @@ Resources:
           - AbortIncompleteMultipartUpload:
               DaysAfterInitiation: 1
             NoncurrentVersionExpirationInDays: 1
-            Prefix: source/
+            Prefix: !Sub ${S3PrefixUpload}/
             Status: Enabled
           - AbortIncompleteMultipartUpload:
               DaysAfterInitiation: 1
             NoncurrentVersionExpirationInDays: 1
-            Prefix: thumbnails/
+            Prefix: !Sub ${S3PrefixThumbnail}/
             Status: Enabled
 
       NotificationConfiguration:
@@ -76,7 +88,7 @@ Resources:
               S3Key:
                 Rules:
                   - Name: prefix
-                    Value: source
+                    Value: !Ref S3PrefixUpload
             Queue: !Sub ${NewImageQueue.Arn}
       Tags:
         - Key: Platform
@@ -154,7 +166,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - 's3:GetObject*'
-                Resource: !Sub ${PhotoBucket.Arn}/*
+                Resource: !Sub ${PhotoBucket.Arn}/${S3PrefixUpload}/*
 
         - PolicyName: dynamodb
           PolicyDocument:
@@ -277,12 +289,12 @@ Resources:
               - Effect: Allow
                 Action:
                   - 's3:GetObject*'
-                Resource: !Sub ${PhotoBucket.Arn}/source/*
+                Resource: !Sub ${PhotoBucket.Arn}/${S3PrefixUpload}/*
 
               - Effect: Allow
                 Action:
                   - 's3:PutObject*'
-                Resource: !Sub ${PhotoBucket.Arn}/thumbnail/*
+                Resource: !Sub ${PhotoBucket.Arn}/${S3PrefixThumbnail}/*
 
   ThumbnailWorker:
     Type: AWS::Lambda::Function
@@ -296,6 +308,9 @@ Resources:
       Role: !Sub ${ThumbnailWorkerRole.Arn}
       Runtime: python3.6
       Timeout: 300
+      Environment:
+        Variables:
+          S3_PREFIX_THUMBNAIL: !Ref S3PrefixThumbnail
       Tags:
         - Key: Platform
           Value: PhotoS3

@@ -131,6 +131,9 @@ def process_thumbnail(event, context):
     """
     Invoked by the initial image processing Lambda
     """
+    thumbnail_prefix = event.get('S3_PREFIX_THUMBNAIL',
+                                 os.environ.get('S3_PREFIX_THUMBNAIL'))
+
     for record in event['Records']:
         # Read in the SNS message and determine the source S3 object
         sns_data = json.loads(record['Sns']['Message'])
@@ -146,7 +149,7 @@ def process_thumbnail(event, context):
 
         # Generate the thumbnail
         try:
-            create_thumbnail(s3_object, width, height)
+            create_thumbnail(s3_object, thumbnail_prefix, width, height)
 
         except Exception as e:
             # Report the failure
