@@ -25,11 +25,14 @@ def get_image_data(img):
     :returns: Tuple of basic info and exif info
     :rtype: tuple
     """
-    basicdata = {
-        k: v
-        for k, v in img.info.items()
-        if k != 'exif'
-    }
+    basicdata = {}
+
+    if img.info:
+        basicdata = {
+            k: v
+            for k, v in img.info.items()
+            if k != 'exif'
+        }
 
     for k, v in basicdata.items():
         if type(v) is bytes:
