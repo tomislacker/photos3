@@ -52,9 +52,7 @@ def get_image_data(img):
         }
 
     except AttributeError:
-        print("WARNING: File ({t}) '{f}' does not have EXIF data".format(
-            t=img.__class__.__name__,
-            f=file_path))
+        pass
 
     for k, v in exifdata.items():
         if type(v) is bytes:
